@@ -1,4 +1,4 @@
-package bg.sofia.uni.fmi.mjt.itinerary;
+package bg.sofia.uni.fmi.mjt.itinerary.graph;
 
 import bg.sofia.uni.fmi.mjt.itinerary.exception.EdgeDoesntExistException;
 import bg.sofia.uni.fmi.mjt.itinerary.exception.VertexDoesntExistException;
@@ -11,11 +11,11 @@ import java.util.Map;
 
 public abstract class WeightedGraphBase<K, V> implements WeightedGraphAPI<K, V> {
 
-    Map<K, List<V>> vertices;
+    protected Map<K, List<V>> edges;
 
     public WeightedGraphBase() {
 
-        vertices = new HashMap<>();
+        edges = new HashMap<>();
 
     }
 
@@ -30,7 +30,7 @@ public abstract class WeightedGraphBase<K, V> implements WeightedGraphAPI<K, V> 
             addVertex(from);
         }
 
-        vertices.get(from).add(branch);
+        edges.get(from).add(branch);
 
     }
 
@@ -41,7 +41,7 @@ public abstract class WeightedGraphBase<K, V> implements WeightedGraphAPI<K, V> 
             throw new IllegalArgumentException("can't add null vertex to graph");
         }
 
-        vertices.put(vertex, new ArrayList<>());
+        edges.put(vertex, new ArrayList<>());
 
     }
 
@@ -52,7 +52,7 @@ public abstract class WeightedGraphBase<K, V> implements WeightedGraphAPI<K, V> 
             throw new EdgeDoesntExistException("There's no such edge in the graph");
         }
 
-        vertices.get(from).remove(branch);
+        edges.get(from).remove(branch);
 
     }
 
@@ -63,7 +63,7 @@ public abstract class WeightedGraphBase<K, V> implements WeightedGraphAPI<K, V> 
             throw new VertexDoesntExistException("There's no such vertex in the graph");
         }
 
-        vertices.remove(vertex);
+        edges.remove(vertex);
 
     }
 
@@ -74,7 +74,7 @@ public abstract class WeightedGraphBase<K, V> implements WeightedGraphAPI<K, V> 
             throw new IllegalArgumentException("Vertex is null");
         }
 
-        return vertices.containsKey(vertex);
+        return edges.containsKey(vertex);
 
     }
 
@@ -85,7 +85,7 @@ public abstract class WeightedGraphBase<K, V> implements WeightedGraphAPI<K, V> 
             throw new IllegalArgumentException("Graph doesn't have null objects");
         }
 
-        return vertices.get(from).contains(branch);
+        return edges.get(from).contains(branch);
 
     }
 
@@ -97,7 +97,7 @@ public abstract class WeightedGraphBase<K, V> implements WeightedGraphAPI<K, V> 
         }
 
         List<V> vertexNeighbours = new ArrayList<>();
-        vertexNeighbours.addAll(vertices.get(vertex));
+        vertexNeighbours.addAll(edges.get(vertex));
 
         return vertexNeighbours;
 

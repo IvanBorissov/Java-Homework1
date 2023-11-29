@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 
 public class AStarNode<T> implements Comparable<AStarNode<T>> {
 
-    T node;
-    BigDecimal heuristic;
+    protected T node;
+    protected BigDecimal heuristic;
 
     public AStarNode(T node, BigDecimal heuristic) {
         this.node = node;
