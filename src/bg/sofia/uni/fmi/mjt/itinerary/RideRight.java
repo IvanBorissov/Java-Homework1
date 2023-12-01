@@ -59,6 +59,11 @@ public class RideRight extends WeightedGraphBase<City, Journey> implements Itine
     public SequencedCollection<Journey> findCheapestPath(City start, City destination, boolean allowTransfer)
         throws NoPathToDestinationException, CityNotKnownException {
 
+        SequencedCollection<Journey> cheapestPath = new ArrayList<Journey>();
+        if (start.equals(destination)) {
+            return cheapestPath;
+        }
+
         if (!cities.contains(start) || !cities.contains(destination)) {
             throw new CityNotKnownException("City doesn't exist");
         }
@@ -68,18 +73,14 @@ public class RideRight extends WeightedGraphBase<City, Journey> implements Itine
         } else if (!allowTransfer && hasConnection(start, destination)) {
 
             SequencedCollection<Journey> cheapestDirectConnection = findCheapestDirectConnection(start, destination);
-            System.out.println(cheapestDirectConnection);
             return Collections.unmodifiableSequencedCollection(cheapestDirectConnection);
         }
 
-        SequencedCollection<Journey> cheapestPath = new ArrayList<Journey>();
         aStarAlgorithm(start, destination);
 
         if (!parent.containsKey(destination)) {
             throw new NoPathToDestinationException("Can't find a path to destination");
         }
-
-        System.out.println(priceTo.get(destination));
 
         cheapestPath = recoverRoute(start, destination);
 
@@ -88,8 +89,10 @@ public class RideRight extends WeightedGraphBase<City, Journey> implements Itine
     }
 
     private SequencedCollection<Journey> findCheapestDirectConnection(City start, City destination) {
+
         Journey currentOptimum = null;
         List<Journey> neighbours = edges.get(start);
+
         for (Journey currentJourney : neighbours) {
             if (currentJourney.to().equals(destination)) {
                 if (currentOptimum == null) {
@@ -100,15 +103,18 @@ public class RideRight extends WeightedGraphBase<City, Journey> implements Itine
 
                     BigDecimal newPrice = currentJourney.price();
                     newPrice = newPrice.add(newPrice.multiply(currentJourney.vehicleType().getGreenTax()));
+
                     if (currentPrice.compareTo(newPrice) > 0) {
                         currentOptimum = currentJourney;
                     }
                 }
             }
         }
+
         SequencedCollection<Journey> toReturn = new ArrayList<Journey>();
         toReturn.add(currentOptimum);
         return toReturn;
+
     }
 
     private boolean hasConnection(City start, City destination) {
@@ -144,33 +150,40 @@ public class RideRight extends WeightedGraphBase<City, Journey> implements Itine
             if (visitedCities.contains(currentNode.node)) {
                 continue;
             }
-
             visitedCities.add(currentNode.node);
 
             List<Journey> neighbours = edges.get(currentNode.node);
 
             for (Journey currentJourney : neighbours) {
 
-                City neighbour = currentJourney.to();
-                BigDecimal newPrice = calculateNewPriceToNode(currentNode, currentJourney);
+                completeChecks(cityQueue, currentNode, currentJourney, destination);
 
-                if (priceTo.get(neighbour) == null) {
+            }
+        }
 
-                    assignNeighbourAndPrice(neighbour, currentJourney, newPrice);
-                    updatePriorityQueue(cityQueue, neighbour, newPrice, destination);
+    }
 
-                } else if (priceTo.get(neighbour).compareTo(newPrice) >= 0) {
+    private void completeChecks(PriorityQueue<AStarNode<City>> cityQueue, AStarNode<City> currentNode,
+                                Journey currentJourney, City destination) {
 
-                    if (priceTo.get(neighbour).compareTo(newPrice) == 0) {
-                        if (!compareParents(neighbour, currentNode.node.name())) {
-                            continue;
-                        }
-                    }
-                    updateNeighbourAndPrice(neighbour, currentJourney, newPrice);
-                    updatePriorityQueue(cityQueue, neighbour, newPrice, destination);
+        City neighbour = currentJourney.to();
+        BigDecimal newPrice = calculateNewPriceToNode(currentNode, currentJourney);
 
+        if (priceTo.get(neighbour) == null) {
+
+            assignNeighbourAndPrice(neighbour, currentJourney, newPrice);
+            updatePriorityQueue(cityQueue, neighbour, newPrice, destination);
+
+        } else if (priceTo.get(neighbour).compareTo(newPrice) >= 0) {
+
+            if (priceTo.get(neighbour).compareTo(newPrice) == 0) {
+                if (!compareParents(neighbour, currentNode.node.name())) {
+                    return;
                 }
             }
+            updateNeighbourAndPrice(neighbour, currentJourney, newPrice);
+            updatePriorityQueue(cityQueue, neighbour, newPrice, destination);
+
         }
 
     }
@@ -229,11 +242,6 @@ public class RideRight extends WeightedGraphBase<City, Journey> implements Itine
         }
 
         Collections.reverse(finalRoute);
-
-        for (Journey current : finalRoute) {
-            System.out.printf("%s %s %s %n", current.from().name(), current.to().name(),
-                current.vehicleType().toString());
-        }
 
         return finalRoute;
 
